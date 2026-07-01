@@ -1,162 +1,129 @@
-# Berlin-Hotel-Management-software
-Desktop app for hotel meetings &amp; events pricing. Auto-calculates mixed German VAT (7% food / 19% beverages) per line item, saves bookings locally, and exports branded Excel &amp; PDF sheets. PySide6 + SQLite.
 # Adina · Meetings & Events — Desktop Price Calculator
 
-A native desktop application (Windows & macOS) for composing hotel conference &
-event bookings, computing **mixed German VAT per line item** (7% food / 19%
-beverages & services), saving everything to a **permanent local database**, and
-Exporting **brand-styled Excel and PDF** price sheets.
+A native desktop application (Windows & macOS) for composing conference-package
+bookings, computing per-line German VAT, saving them to a permanent local
+database, and exporting brand-styled Excel and PDF price sheets.
 
-Built with Python + PySide6 (Qt). All data stays on the machine — nothing is
-Sent anywhere, and bookings persist across restarts.
-
----
-
-## Why this exists
-
-Conference and event pricing in hospitality involves **multiple packages, optional
-add-ons, and mixed VAT rates**. In Germany, food is taxed at 7% while beverages
-and services (room hire, equipment, drinks) are taxed at 19%. Calculating this
-by hand across many bookings is slow and error-prone, and a single mistake can
-cause problems at audit time.
-
-This app replaces a complex pricing spreadsheet with a clean, click-and-go tool
-that applies the correct VAT split automatically and produces accounting-ready
-exports.
+Built with Python + PySide6 (Qt). Data is stored locally in SQLite — nothing
+leaves the computer, and bookings persist across restarts.
 
 ---
 
-## Features
+## Files
 
-- **Five itemized packages** — each package is defined line by line with its own
-  accounting code and VAT rate, so mixed-rate packages split correctly.
-- **Live cost breakdown** — see net, VAT 7%, VAT 19%, gross, and final total
-  update in real time as you build a booking.
-- **Optional add-on services** — parking, extra coffee, extra drinks (start at 0;
-  staff enter a value only when needed).
-- **Package variants** — e.g. add a Welcome Coffee (Begrüßungskaffee) with one tick.
-- **Manual +/− adjustment** — with an optional note, to match paper documents.
-- **Automatic booking IDs** — `DDMMYYYY` + sequence, or enter your own.
-- **Permanent local storage** — every booking saved to a local SQLite database.
-- **One-click exports** — branded **Excel** (Summary + Itemized sheets) and
-  **PDF** price sheets, for single bookings or the whole list.
-- **Runs offline** — no internet, no account, no server.
+| File | What it does |
+|------|--------------|
+| `app.py` | The GUI (the program you run). |
+| `core.py` | Packages, services, and the VAT calculation engine. **Edit prices here.** |
+| `database.py` | Local SQLite storage. |
+| `exports.py` | Excel + PDF generation. |
+| `requirements.txt` | The three libraries needed. |
 
 ---
 
-## Tech stack
+## A. Run it directly (quickest — needs Python)
 
-| Layer | Tool |
-|-------|------|
-| UI | [PySide6](https://doc.qt.io/qtforpython/) (Qt) |
-| Storage | SQLite (via Python's built-in `sqlite3`) |
-| Excel export | [openpyxl](https://openpyxl.readthedocs.io/) |
-| PDF export | [ReportLab](https://www.reportlab.com/) |
-| Packaging | [PyInstaller](https://pyinstaller.org/) |
+1. Install Python 3.10+ from https://python.org (on Windows, tick
+   **"Add Python to PATH"** during install).
+2. Open a terminal (Windows: **Command Prompt** or **PowerShell**; Mac: **Terminal**)
+   in this folder and run:
+
+   ```
+   pip install -r requirements.txt
+   python app.py
+   ```
+
+The window opens. That's it.
 
 ---
 
-## Project structure
+## B. Build a standalone app (no Python needed to run it)
+
+This produces a single file you can copy to any Windows or Mac machine and
+double-click — the end user does **not** need Python installed.
+
+> Important: you must build **on the same OS you're targeting**. Build on
+> Windows to get a `.exe`; build on a Mac to get a `.app`. PyInstaller cannot
+> cross-build.
+
+### Step 1 — install the tools (one time)
 
 ```
-adina-app/
-├── app.py            # GUI — the program you run
-├── core.py           # Packages, services & VAT engine — edit prices here
-├── database.py       # Local SQLite storage
-├── exports.py        # Excel + PDF generation
-├── requirements.txt  # Dependencies
-└── README.md
-```
-
----
-
-## Getting started
-
-### Requirements
-- Python 3.10 or newer
-
-### Run from source (quickest)
-
-```bash
-pip install -r requirements.txt
-python app.py          # use python3 on macOS/Linux
-```
-
-The window opens immediately.
-
-### Build a standalone app (no Python needed to run it)
-
-> Build on the OS you're targeting — PyInstaller can't cross-build. Build on
-> Windows for a `.exe`, on macOS for a `.app`.
-
-```bash
 pip install -r requirements.txt
 pip install pyinstaller
+```
+
+### Step 2 — build
+
+**Windows** (produces `dist\Adina.exe`):
+
+```
 pyinstaller --noconfirm --windowed --onefile --name "Adina" app.py
 ```
 
-The finished program appears in the **`dist/`** folder:
-- Windows → `dist/Adina.exe`
-- macOS → `dist/Adina.app`
+**macOS** (produces `dist/Adina.app`):
 
-**macOS note:** the first time you open the app, right-click → **Open** →
-**Open** to get past the unsigned-app warning (only needed once).
+```
+pyinstaller --noconfirm --windowed --onefile --name "Adina" app.py
+```
+
+When it finishes, your program is in the **`dist`** folder. Copy that one
+file (`Adina.exe` or `Adina.app`) to wherever you want to use it.
+
+Notes:
+- `--windowed` hides the black console window.
+- First launch may take a few seconds while it unpacks.
+- On macOS, the first time you open it you may need to right-click →
+  **Open** (because it isn't code-signed by Apple). This is normal for
+  self-built apps.
 
 ---
 
-## Configuration
+## Where your data is stored
 
-All prices, packages, and services live at the top of **`core.py`**. Each
-package line is:
+A folder named **`.adina_meetings`** in your user home directory:
+
+- Windows: `C:\Users\<you>\.adina_meetings\bookings.db`
+- macOS: `/Users/<you>/.adina_meetings/bookings.db`
+
+To **back up** your bookings, copy that `bookings.db` file. To move to a new
+computer, copy it into the same folder there.
+
+---
+
+## Changing packages, prices, or services
+
+Open **`core.py`** and edit the `PACKAGES` and `SERVICES` sections at the top.
+Each package line is:
 
 ```python
 ("Line item name", gross_price, vat_rate, "accounting_code")
 ```
 
-- `gross_price` — the VAT-inclusive (Brutto) price
-- `vat_rate` — `7` (food / lodging) or `19` (beverages / services)
+- `gross_price` is the VAT-inclusive (Brutto) price.
+- `vat_rate` is `7` (food / lodging) or `19` (beverages / services).
+- VAT is computed automatically per line, so totals always foot to the sum of
+  gross prices.
 
-VAT is computed per line from the gross price, so totals always foot to the sum
-of gross prices. Edit and re-run (or re-build) to apply changes.
-
----
-
-## Data storage
-
-Bookings are saved to:
-
-- **Windows:** `C:\Users\<you>\.adina_meetings\bookings.db`
-- **macOS:** `/Users/<you>/.adina_meetings/bookings.db`
-
-To back up or migrate, copy that `bookings.db` file.
+Add the Welcome Coffee–style options under a package's `"variants"` list.
+After editing, re-run (method A) or re-build (method B).
 
 ---
 
-## VAT logic
+## VAT logic (German law, 2026)
 
-Follows German UStG rules effective **1 January 2026**: food and lodging at
-**7%**, beverages and services at **19%**. Because every package is itemized,
-mixed-rate packages are split accurately and remain audit-clean.
-
----
-
-## Roadmap / ideas
-
-- Optional Adina logo icon (`.ico` / `.icns`) for the built app
-- Search and filter the booking list
-- Batch "export each selected booking as its own file"
-- Editable packages from within the UI (no code edit)
+Food and lodging are taxed at **7%**; beverages and services (room hire,
+equipment, drinks) at **19%**, following the German UStG rules effective
+1 January 2026. Each package is itemized, so mixed-rate packages split their
+VAT correctly and audit-cleanly.
 
 ---
 
-## License
+## Notes / open items
 
-Add a license of your choice (e.g. MIT) before publishing.
-
----
-
-## Disclaimer
-
-This is an independent tool. Package names, prices, and branding are used for
-demonstration; confirm any real-world tax figures with a qualified accountant
-before operational use.
+- **Overnight package room rate:** the supplied line items (135.00 + 11.32 +
+  5.40) total **€151.72**, while the original header said €146.32. The app uses
+  the itemized lines. If the room line should differ, change it in `core.py`.
+- The app is not code-signed. For wide internal distribution on managed
+  machines, you may want a signing certificate (Windows) or Apple Developer ID
+  (Mac), but it runs fine without one.
